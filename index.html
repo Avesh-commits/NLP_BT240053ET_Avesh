@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusForge • Complaint Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500&amp;display=swap');
+        
+        :root {
+            --neon-blue: #00f5ff;
+        }
+        
+        * {
+            transition-property: color, background-color, border-color, text-decoration-color, fill, stroke;
+            transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+            transition-duration: 150ms;
+        }
+        
+        .glass {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        
+        .neon-text {
+            text-shadow: 0 0 10px var(--neon-blue),
+                        0 0 20px var(--neon-blue);
+        }
+        
+        .glow-button {
+            box-shadow: 0 0 15px -3px var(--neon-blue),
+                        0 0 8px -2px var(--neon-blue);
+        }
+        
+        .glow-button:hover {
+            box-shadow: 0 0 25px 5px var(--neon-blue),
+                        0 0 15px 3px var(--neon-blue);
+            transform: translateY(-2px);
+        }
+        
+        .card-hover {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 25px 50px -12px rgb(0 245 255 / 0.15);
+        }
+        
+        .status-badge {
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.75; }
+        }
+        
+        .modal {
+            animation: modalPop 0.3s ease-out;
+        }
+        
+        @keyframes modalPop {
+            0% { transform: scale(0.95); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .sidebar-link {
+            position: relative;
+        }
+        
+        .sidebar-link.active::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 24px;
+            background: #00f5ff;
+            border-top-right-radius: 9999px;
+            border-bottom-right-radius: 9999px;
+        }
+        
+        .main-content {
+            animation: fadeIn 0.4s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-[#0a0a1f] text-white font-sans">
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-[radial-gradient(at_center,#1a1a3a_0%,#0a0a1f_70%)]">
+        <div class="glass w-full max-w-lg mx-4 rounded-3xl border border-white/10 shadow-2xl overflow-hidden">
+            <!-- Header -->
+            <div class="px-10 pt-10 pb-6 text-center">
+                <div class="flex items-center justify-center gap-x-3 mb-4">
+                    <div class="w-11 h-11 bg-gradient-to-br from-[#00f5ff] to-[#0099ff] rounded-2xl flex items-center justify-center text-3xl shadow-[0_0_25px_#00f5ff]">
+                        ⚡
+                    </div>
+                    <h1 class="text-4xl font-bold tracking-[-1px]" style="font-family: 'Space Grotesk', sans-serif;">
+                        CampusForge
+                    </h1>
+                </div>
+                <p class="text-[#00f5ff] text-lg font-medium neon-text">College Complaint Management</p>
+                <p class="text-slate-400 mt-1 text-sm">Premium • Futuristic • Instant</p>
+            </div>
+
+            <!-- Role Selector -->
+            <div class="px-10">
+                <div class="flex border-b border-white/10 mb-6">
+                    <button onclick="selectRole(0)" id="role-tab-0"
+                            class="role-tab flex-1 py-4 text-center font-medium text-sm uppercase tracking-widest border-b-2 border-transparent hover:text-white data-[active=true]:border-[#00f5ff] data-[active=true]:text-[#00f5ff]">
+                        Student
+                    </button>
+                    <button onclick="selectRole(1)" id="role-tab-1"
+                            class="role-tab flex-1 py-4 text-center font-medium text-sm uppercase tracking-widest border-b-2 border-transparent hover:text-white data-[active=true]:border-[#00f5ff] data-[active=true]:text-[#00f5ff]">
+                        Teacher
+                    </button>
+                    <button onclick="selectRole(2)" id="role-tab-2"
+                            class="role-tab flex-1 py-4 text-center font-medium text-sm uppercase tracking-widest border-b-2 border-transparent hover:text-white data-[active=true]:border-[#00f5ff] data-[active=true]:text-[#00f5ff]">
+                        Maintenance
+                    </button>
+                    <button onclick="selectRole(3)" id="role-tab-3"
+                            class="role-tab flex-1 py-4 text-center font-medium text-sm uppercase tracking-widest border-b-2 border-transparent hover:text-white data-[active=true]:border-[#00f5ff] data-[active=true]:text-[#00f5ff]">
+                        Super Admin
+                    </button>
+                </div>
+
+                <!-- Login Form -->
+                <div id="login-form">
+                    <!-- Dynamic fields injected by JS -->
+                    <div id="dynamic-fields" class="space-y-6"></div>
+
+                    <button onclick="handleLogin()"
+                            class="glow-button w-full mt-8 py-4 bg-gradient-to-r from-[#00f5ff] to-[#0099ff] text-black font-semibold rounded-2xl flex items-center justify-center gap-x-3 hover:brightness-110 text-lg">
+                        <i class="fa-solid fa-right-to-bracket"></i>
+                        <span id="login-btn-text">ENTER CAMPUSFORGE</span>
+                    </button>
+                </div>
+            </div>
+
+            <div class="text-center text-xs text-slate-400 py-6 border-t border-white/10">
+                Built as premium demo • 100% localStorage • Glassmorphism UI
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP -->
+    <div id="app-screen" class="hidden min-h-screen flex flex-col">
+        
+        <!-- TOP NAV -->
+        <nav class="glass border-b border-white/10 px-8 py-5 flex items-center justify-between sticky top-0 z-50">
+            <div class="flex items-center gap-x-4">
+                <div class="w-9 h-9 bg-gradient-to-br from-[#00f5ff] to-[#0099ff] rounded-2xl flex items-center justify-center text-2xl flex-shrink-0">⚡</div>
+                <h1 class="text-2xl font-semibold tracking-[-0.5px]" style="font-family: 'Space Grotesk', sans-serif;">CampusForge</h1>
+                <span id="role-badge" onclick="if(currentUser.role==='superadmin') switchRoleDemo()" 
+                      class="ml-3 px-4 py-1 text-xs font-bold rounded-3xl bg-white/10 text-[#00f5ff] flex items-center gap-x-1 cursor-pointer">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span id="current-role-name"></span>
+                </span>
+            </div>
+
+            <!-- Language Switcher -->
+            <div class="flex items-center bg-white/10 rounded-3xl p-1 text-sm font-medium">
+                <button onclick="changeLanguage('en')" id="lang-en"
+                        class="lang-btn px-5 py-2 rounded-3xl data-[active=true]:bg-[#00f5ff] data-[active=true]:text-black flex items-center gap-x-1">
+                    🇬🇧 EN
+                </button>
+                <button onclick="changeLanguage('hi')" id="lang-hi"
+                        class="lang-btn px-5 py-2 rounded-3xl data-[active=true]:bg-[#00f5ff] data-[active=true]:text-black flex items-center gap-x-1">
+                    🇮🇳 हि
+                </button>
+                <button onclick="changeLanguage('mr')" id="lang-mr"
+                        class="lang-btn px-5 py-2 rounded-3xl data-[active=true]:bg-[#00f5ff] data-[active=true]:text-black flex items-center gap-x-1">
+                    🇮🇳 मर
+                </button>
+            </div>
+
+            <div class="flex items-center gap-x-6">
+                <!-- Search -->
+                <div onclick="showSearch()" class="glass border border-white/10 text-slate-300 hover:text-white px-4 h-10 rounded-3xl flex items-center gap-x-2 text-sm cursor-pointer">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <span id="search-placeholder" class="hidden md:block">Search complaints...</span>
+                </div>
+
+                <!-- Announcements Bell -->
+                <div onclick="showAnnouncements()" class="relative cursor-pointer">
+                    <i class="fa-solid fa-bullhorn text-xl"></i>
+                    <span id="announcement-count" class="absolute -top-1 -right-1 text-[10px] bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center">3</span>
+                </div>
+
+                <!-- User -->
+                <div class="flex items-center gap-x-3 cursor-pointer" onclick="showProfile()">
+                    <div class="text-right">
+                        <p id="user-name" class="font-semibold text-sm"></p>
+                        <p id="user-id" class="text-xs text-slate-400"></p>
+                    </div>
+                    <div class="w-9 h-9 bg-gradient-to-br from-[#00f5ff]/20 to-transparent border border-[#00f5ff] rounded-2xl flex items-center justify-center text-[#00f5ff]">
+                        👤
+                    </div>
+                </div>
+
+                <button onclick="logout()" 
+                        class="flex items-center justify-center w-9 h-9 glass rounded-2xl hover:bg-white/10 text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </button>
+            </div>
+        </nav>
+
+        <div class="flex flex-1 overflow-hidden">
+            
+            <!-- SIDEBAR -->
+            <div id="sidebar" class="glass w-72 border-r border-white/10 flex flex-col py-6 px-4 hidden md:flex">
+                <div id="sidebar-content"></div>
+            </div>
+
+            <!-- MAIN CONTENT AREA -->
+            <div class="flex-1 p-6 md:p-8 overflow-auto" id="main-content">
+                <!-- Dynamically injected by render functions -->
+            </div>
+        </div>
+    </div>
+
+    <!-- COMPLAINT DETAIL MODAL -->
+    <div onclick="if(event.target.id === 'complaint-modal')hideModal()" 
+         id="complaint-modal"
+         class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-[100] flex items-center justify-center">
+        <div onclick="event.stopImmediatePropagation()" 
+             class="modal glass w-full max-w-4xl mx-4 rounded-3xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div class="px-8 py-6 border-b border-white/10 flex items-center justify-between">
+                <div>
+                    <h2 id="modal-title" class="text-2xl font-semibold"></h2>
+                    <p id="modal-student" class="text-slate-400 text-sm"></p>
+                </div>
+                <div id="modal-status" onclick="event.stopImmediatePropagation()" class="flex items-center gap-x-2"></div>
+                <button onclick="hideModal()" class="text-slate-400 hover:text-white text-3xl leading-none">×</button>
+            </div>
+            
+            <div class="flex-1 p-8 overflow-auto">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <!-- Left Column -->
+                    <div class="lg:col-span-2 space-y-8">
+                        <div>
+                            <h3 class="uppercase text-xs tracking-widest text-slate-400 mb-3">Description</h3>
+                            <p id="modal-desc" class="leading-relaxed text-slate-200"></p>
+                            
+                            <!-- Translated preview -->
+                            <div id="translate-preview" class="mt-6 hidden">
+                                <div class="flex items-center gap-x-3 text-xs text-[#00f5ff] mb-2">
+                                    <i class="fa-solid fa-language"></i>
+                                    <span id="translate-lang-label"></span>
+                                </div>
+                                <p id="modal-translated" class="text-sm bg-white/5 p-4 rounded-2xl"></p>
+                            </div>
+                        </div>
+
+                        <!-- Image -->
+                        <div id="modal-image-container" class="hidden">
+                            <h3 class="uppercase text-xs tracking-widest text-slate-400 mb-3">Uploaded Photo</h3>
+                            <img id="modal-image" src="" class="rounded-3xl max-h-80 w-full object-cover border border-white/10" alt="">
+                        </div>
+
+                        <!-- Responses -->
+                        <div>
+                            <h3 class="uppercase text-xs tracking-widest text-slate-400 mb-3">Official Responses</h3>
+                            <div id="modal-responses" class="space-y-4"></div>
+                        </div>
+
+                        <!-- Chat -->
+                        <div>
+                            <h3 class="uppercase text-xs tracking-widest text-slate-400 mb-3 flex items-center justify-between">
+                                <span>Live Discussion</span>
+                                <span onclick="clearChat()" class="text-[#00f5ff] text-xs cursor-pointer hover:underline">Clear</span>
+                            </h3>
+                            <div id="chat-window" class="h-72 bg-white/5 rounded-3xl p-4 overflow-auto mb-4 flex flex-col"></div>
+                            
+                            <div class="flex gap-x-3">
+                                <input id="chat-input" 
+                                       onkeydown="if(event.keyCode===13) sendChatMessage()"
+                                       type="text" placeholder="Type message..." 
+                                       class="flex-1 glass border border-white/10 rounded-3xl px-6 py-4 focus:outline-none focus:border-[#00f5ff]">
+                                <button onclick="sendChatMessage()" 
+                                        class="glow-button w-12 h-12 bg-[#00f5ff] text-black rounded-3xl flex items-center justify-center">
+                                    <i class="fa-solid fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column - Admin Controls -->
+                    <div id="modal-admin-controls" class="space-y-6">
+                        <div class="glass rounded-3xl p-6">
+                            <h3 class="text-sm uppercase mb-4">Update Status</h3>
+                            <select id="status-select" class="w-full glass border border-white/10 rounded-2xl px-5 py-4 text-white">
+                                <option value="Pending">Pending</option>
+                                <option value="Reviewing">Reviewing</option>
+                                <option value="In Process">In Process</option>
+                                <option value="Solved">Solved</option>
+                            </select>
+                            
+                            <textarea id="response-text" rows="4" 
+                                      class="mt-4 w-full glass border border-white/10 rounded-3xl p-5 text-sm"
+                                      placeholder="What is the issue? Action taken? Reason?"></textarea>
+                            
+                            <button onclick="updateComplaintStatus()" 
+                                    class="mt-6 glow-button w-full py-4 bg-gradient-to-r from-[#00f5ff] to-[#0099ff] text-black font-semibold rounded-3xl">
+                                SAVE UPDATE + RESPONSE
+                            </button>
+                        </div>
+
+                        <div onclick="suspendStudentFromModal()" 
+                             class="glass rounded-3xl p-6 flex items-center justify-between cursor-pointer hover:bg-red-500/10 group">
+                            <div>
+                                <i class="fa-solid fa-ban text-xl text-red-400 group-hover:text-red-500"></i>
+                                <p class="font-medium mt-1">Suspend Student (20 days)</p>
+                                <p class="text-xs text-slate-400">For misuse / spam</p>
+                            </div>
+                            <i class="fa-solid fa-arrow-right text-red-400"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TOAST -->
+    <div id="toast" onclick="this.classList.add('hidden')" 
+         class="hidden fixed bottom-6 right-6 bg-[#00f5ff] text-black px-6 py-4 rounded-3xl shadow-2xl flex items-center gap-x-3 font-medium">
+        <i class="fa-solid fa-check-circle"></i>
+        <span id="toast-text"></span>
+    </div>
+
+    <script>
+        // ====================== CONFIG & STATE ======================
+        let currentUser = null
+        let currentLang = 'en'
+        let currentPanel = 'dashboard'
+        let selectedComplaintId = null
+        
+        // i18n translations
+        const i18n = {
+            en: {
+                dashboard: "Dashboard",
+                submit: "Submit Complaint",
+                myComplaints: "My Complaints",
+                allComplaints: "All Complaints",
+                announcements: "Announcements",
+                analytics: "Analytics",
+                users: "Manage Users",
+                totalComplaints: "Total Complaints",
+                active: "Active",
+                resolved: "Resolved",
+                pending: "Pending",
+                electricity: "Electricity",
+                maintenance: "Maintenance",
+                submitNew: "Submit New Complaint",
+                status: "Status",
+                chat: "Chat",
+                solved: "Solved",
+                inProcess: "In Process",
+                reviewing: "Reviewing"
+            },
+            hi: {
+                dashboard: "डैशबोर्ड",
+                submit: "शिकायत दर्ज करें",
+                myComplaints: "मेरी शिकायतें",
+                allComplaints: "सभी शिकायतें",
+                announcements: "घोषणाएँ",
+                analytics: "विश्लेषण",
+                users: "उपयोगकर्ता प्रबंधन",
+                totalComplaints: "कुल शिकायतें",
+                active: "सक्रिय",
+                resolved: "हल",
+                pending: "लंबित",
+                electricity: "बिजली",
+                maintenance: "रखरखाव",
+                submitNew: "नई शिकायत दर्ज करें",
+                status: "स्थिति",
+                chat: "चैट",
+                solved: "हल",
+                inProcess: "प्रक्रिया में",
+                reviewing: "समीक्षा"
+            },
+            mr: {
+                dashboard: "डॅशबोर्ड",
+                submit: "तक्रार नोंदवा",
+                myComplaints: "माझ्या तक्रारी",
+                allComplaints: "सर्व तक्रारी",
+                announcements: "जाहीरात",
+                analytics: "विश्लेषण",
+                users: "वापरकर्ते व्यवस्थापन",
+                totalComplaints: "एकूण तक्रारी",
+                active: "सक्रिय",
+                resolved: "सोडवले",
+                pending: "प्रलंबित",
+                electricity: "विज",
+                maintenance: "दुरुस्ती",
+                submitNew: "नवीन तक्रार नोंदवा",
+                status: "स्थिती",
+                chat: "चॅट",
+                solved: "सोडवले",
+                inProcess: "प्रक्रियेत",
+                reviewing: "पुनरावलोकन"
+            }
+        }
+        
+        // Fake profane words for moderation
+        const profaneWords = ['fuck', 'shit', 'bastard', 'idiot', 'stupid', 'damn', 'asshole', 'bitch', 'crap', 'मूर्ख', 'गाढव']
+        
+        // Data storage
+        let complaints = []
+        let announcementsData = []
+        let usersData = []
+        
+        // Tailwind script initialization
+        function initTailwind() {
+            return {
+                config(userConfig = {}) {
+                    return {
+                        configUser: userConfig,
+                        theme: {
+                            extend: {
+                                colors: {
+                                    neon: '#00f5ff'
+                                }
+                            }
+                        }
+                    }
+                },
+                theme(config) {
+                    return {
+                        ...this.defaultTheme(),
+                        ...config,
+                    }
+                },
+                defaultTheme() {
+                    return {
+                        colors: {
+                            neon: '#00f5ff'
+                        }
+                    }
+                }
+            }
+        }
+        
+        // ====================== FAKE DATA ======================
+        function initFakeData() {
+            if (localStorage.getItem('campusforge_complaints')) {
+                complaints = JSON.parse(localStorage.getItem('campusforge_complaints'))
+                return
+            }
+            
+            complaints = [
+                {
+                    id: "C-1001",
+                    studentId: "BT241234",
+                    studentName: "Samiksha Patil",
+                    title: "Hostel room fan not working",
+                    department: "Electricity",
+                    description: "My room fan stopped working since yesterday night. Very hot here.",
+                    image: null,
+                    status: "Solved",
+                    timestamp: "2026-04-03T10:15:00",
+                    responses: [
+                        { from: "Maintenance Admin", text: "Electrician assigned. Fixed at 11:30 AM.", time: "2026-04-03T11:45:00" }
+                    ],
+                    chat: [
+                        { user: "Samiksha Patil", msg: "Thank you! Fan is now working perfectly.", time: "2026-04-03T12:05:00" },
+                        { user: "Maintenance Admin", msg: "You're welcome.", time: "2026-04-03T12:10:00" }
+                    ]
+                },
+                {
+                    id: "C-1002",
+                    studentId: "BT241234",
+                    studentName: "Samiksha Patil",
+                    title: "Washroom tap leaking badly",
+                    department: "Maintenance",
+                    description: "The tap in common washroom is leaking water continuously.",
+                    image: null,
+                    status: "In Process",
+                    timestamp: "2026-04-05T08:30:00",
+                    responses: [],
+                    chat: []
+                },
+                {
+                    id: "C-1003",
+                    studentId: "BT245678",
+                    studentName: "Aarav Sharma",
+                    title: "No power in classroom 301",
+                    department: "Electricity",
+                    description: "Entire classroom has no electricity since morning lecture.",
+                    image: null,
+                    status: "Reviewing",
+                    timestamp: "2026-04-04T09:00:00",
+                    responses: [],
+                    chat: []
+                },
+                {
+                    id: "C-1004",
+                    studentId: "BT241234",
+                    studentName: "Samiksha Patil",
+                    title: "Broken window glass in library",
+                    department: "Maintenance",
+                    description: "One of the library windows is broken. Risk of injury.",
+                    image: "https://picsum.photos/id/1015/800/600",
+                    status: "Pending",
+                    timestamp: "2026-04-06T14:20:00",
+                    responses: [],
+                    chat: [
+                        { user: "Samiksha Patil", msg: "Can someone please check this ASAP?", time: "2026-04-06T14:25:00" }
+                    ]
+                }
+            ]
+            
+            announcementsData = [
+                {
+                    id: 1,
+                    title: "Campus electricity maintenance tomorrow",
+                    content: "Power will be off from 10 AM to 2 PM in hostels A, B and C.",
+                    date: "2026-04-05",
+                    postedBy: "Super Admin"
+                },
+                {
+                    id: 2,
+                    title: "New complaint policy update",
+                    content: "All complaints must be submitted with photo evidence from April 10.",
+                    date: "2026-04-01",
+                    postedBy: "Super Admin"
+                }
+            ]
+            
+            usersData = [
+                { id: "BT241234", name: "Samiksha Patil", role: "student", suspendedUntil: null },
+                { id: "BT245678", name: "Aarav Sharma", role: "student", suspendedUntil: null },
+                { id: "teacher01", name: "Prof. R. Deshmukh", role: "teacher", suspendedUntil: null },
+                { id: "maint01", name: "Vikas Maintenance", role: "maintenance", suspendedUntil: null }
+            ]
+            
+            localStorage.setItem('campusforge_complaints', JSON.stringify(complaints))
+            localStorage.setItem('campusforge_announcements', JSON.stringify(announcementsData))
+            localStorage.setItem('campusforge_users', JSON.stringify(usersData))
+        }
+        
+        // ====================== AUTH ======================
+        let selectedRoleIndex = 0
+        
+        function selectRole(index) {
+            selectedRoleIndex = index
+            document.querySelectorAll('.role-tab').forEach((el, i) => {
+                el.dataset.active = i === index
+            })
+            renderLoginFields()
+        }
+        
+        function renderLoginFields() {
+            const container = document.getElementById('dynamic-fields')
+            const roleNames = ['Student', 'Teacher', 'Maintenance Admin', 'Super Admin']
+            
+            let html = `<p class="text-slate-300 mb-2 text-sm">Logging in as <span class="font-semibold text-[#00f5ff]">${roleNames[selectedRoleIndex]}</span></p>`
+            
+            if (selectedRoleIndex === 0) {
+                // Student
+                html += `
+                <div>
+                    <label class="text-xs uppercase tracking-widest text-slate-400 block mb-2">Student ID (BT24xxxx)</label>
+                    <input id="student-id-input" type="text" 
+                           class="glass w-full border border-white/10 rounded-3xl px-6 py-5 text-lg focus:outline-none focus:border-[#00f5ff]" 
+                           placeholder="BT241234" maxlength="8">
+                </div>
+                <div class="text-xs text-slate-400 mt-4 flex items-center gap-x-2">
+                    <i class="fa-solid fa-info-circle"></i>
+                    No password required for students
+                </div>`
+            } else {
+                // Staff
+                html += `
+                <div>
+                    <label class="text-xs uppercase tracking-widest text-slate-400 block mb-2">Username</label>
+                    <input id="staff-username" type="text" value="${['teacher01','maint01','admin'][selectedRoleIndex-1]}" 
+                           class="glass w-full border border-white/10 rounded-3xl px-6 py-5 text-lg focus:outline-none focus:border-[#00f5ff]">
+                </div>
+                <div class="mt-6">
+                    <label class="text-xs uppercase tracking-widest text-slate-400 block mb-2">Password</label>
+                    <input id="staff-password" type="password" value="123456" 
+                           class="glass w-full border border-white/10 rounded-3xl px-6 py-5 text-lg focus:outline-none focus:border-[#00f5ff]">
+                </div>`
+            }
+            
+            container.innerHTML = html
+            document.getElementById('login-btn-text').innerHTML = `ENTER AS ${roleNames[selectedRoleIndex].toUpperCase()}`
+        }
+        
+        function handleLogin() {
+            let role = ''
+            let id = ''
+            let name = ''
+            
+            if (selectedRoleIndex === 0) {
+                // Student
+                const input = document.getElementById('student-id-input').value.trim().toUpperCase()
+                if (!/^BT24\d{4}$/.test(input)) {
+                    showToast("Invalid Student ID format. Must be BT24xxxx", true)
+                    return
+                }
+                role = 'student'
+                id = input
+                name = "Samiksha Patil" // Demo user from context
+            } else if (selectedRoleIndex === 1) {
+                role = 'teacher'
+                id = 'teacher01'
+                name = 'Prof. R. Deshmukh'
+            } else if (selectedRoleIndex === 2) {
+                role = 'maintenance'
+                id = 'maint01'
+                name = 'Vikas Maintenance'
+            } else {
+                role = 'superadmin'
+                id = 'admin'
+                name = 'Super Admin'
+            }
+            
+            // Check suspension for students
+            if (role === 'student') {
+                const users = JSON.parse(localStorage.getItem('campusforge_users') || '[]')
+                const user = users.find(u => u.id === id)
+                if (user && user.suspendedUntil && new Date(user.suspendedUntil) > new Date()) {
+                    showToast("You are suspended for 20 days. Contact Super Admin.", true)
+                    return
+                }
+            }
+            
+            currentUser = { role, id, name }
+            localStorage.setItem('campusforge_current_user', JSON.stringify(currentUser))
+            
+            // Hide login, show app
+            document.getElementById('login-screen').classList.add('hidden')
+            document.getElementById('app-screen').classList.remove('hidden')
+            
+            initApp()
+        }
+        
+        function logout() {
+            currentUser = null
+            localStorage.removeItem('campusforge_current_user')
+            document.getElementById('app-screen').classList.add('hidden')
+            document.getElementById('login-screen').classList.remove('hidden')
+            selectRole(0) // reset to student
+        }
+        
+        // ====================== APP CORE ======================
+        function initApp() {
+            const savedUser = localStorage.getItem('campusforge_current_user')
+            if (savedUser) currentUser = JSON.parse(savedUser)
+            
+            initFakeData()
+            
+            // Render sidebar based on role
+            renderSidebar()
+            
+            // Set role badge
+            document.getElementById('current-role-name').textContent = currentUser.role.toUpperCase()
+            document.getElementById('user-name').textContent = currentUser.name
+            document.getElementById('user-id').textContent = currentUser.id
+            
+            // Default panel
+            currentPanel = 'dashboard'
+            renderMainContent()
+            
+            // Make charts responsive
+            window.addEventListener('resize', () => {
+                if (currentPanel === 'dashboard') renderMainContent()
+            })
+        }
+        
+        function renderSidebar() {
+            const sidebar = document.getElementById('sidebar-content')
+            
+            let html = `<div class="px-3">`
+            
+            if (currentUser.role === 'student') {
+                html += `
+                <a onclick="navigate('dashboard')" class="sidebar-link flex items-center gap-x-3 px-6 py-4 text-sm font-medium rounded-3xl mb-1 ${currentPanel==='dashboard'?'active bg-white/10':''}">
+                    <i class="fa-solid fa-house w-5"></i>
+                    <span>${t('dashboard')}</span>
+                </a>
+                <a onclick="navigate('submit')" class="sidebar-link flex items-center gap-x-3 px-6 py-4 text-sm font-medium rounded-3xl mb-1 ${currentPanel==='submit'?'active bg-white/10':''}">
+                    <i class="fa-solid fa-plus w-5"></i>
+                    <span>${t('submit')}</span>
+                </a>
+                <a onclick="navigate('mycomplaints')" class="sidebar-link flex items-center gap-x-3 px-6 py-4 text-sm font-medium rounded-3xl mb-1 ${currentPanel==='mycomplaints'?'active bg-white/10':''}">
+                    <i class="fa-solid fa-list-check w-5"></i>
+                    <span>${t('myComplaints')}</span>
+                </a>
+                `
+            } else if (currentUser.role === 'teacher' || currentUser.role === 'maintenance') {
+                html += `
+                <a onclick="navigate('dashboard')" class="sidebar-link flex items-center gap-x-3 px-6 py-4 text-sm font-medium rounded-3xl mb-1 ${currentPanel==='dashboard'?'active bg-white/10':''}">
+                    <i class="fa-solid fa-house w-5"></i>
+                    <span>${t('dashboard')}</span>
+                </a>
+                <a onclick="navigate('allcomplaints')" class="sidebar-link flex items-center gap-x-3 px-6 py-4 text-sm font-medium rounded-3xl mb-1 ${currentPanel==='allcomplaints'?'active bg-white/10':''}">
+                    <i class="fa-solid fa-list-check w-5"></i>
+                    <span>${t('allComplaints')}</span>
+                </a>
+                <a onclick="navigate('announcements')" class="sidebar-link flex items-center gap-x-3 px-6 py-4 text-sm font-medium rounded-3xl mb-1 ${currentPanel==='announcements'?'active bg-white/10':''}">
+                    <i class="fa-solid fa-bullhorn w-5"></i>
+                    <span>${t('announcements')}</span>
+                </a>
+                `
+            } else if (currentUser.role === 'superadmin') {
+                html += `
+                <a onclick="navigate('dashboard')" class="sidebar-link flex items-center gap-x-3 px-6 py-4 text-sm font-medium rounded-3xl mb-1 ${currentPanel==='dashboard'?'active bg-white/10':''}">
+                    <i class="fa-solid fa-house w-5"></i>
+                    <span>${t('dashboard')}</span>
+                </a>
+                <a onclick="navigate('allcomplaints')" class="sidebar-link flex items-center gap-x-3 px-6 py-4 text-sm font-medium rounded-3xl mb-1 ${currentPanel==='allcomplaints'?'active bg-white/10':''}">
+                    <i class="fa-solid fa-list-check w-5"></i>
+                    <span>${t('allComplaints')}</span>
+                </a>
+                <a onclick="navigate('analytics')" class="sidebar-link flex items-center gap-x-3 px-6 py-4 text-sm font-medium rounded-3xl mb-1 ${currentPanel==='analytics'?'active bg-white/10':''}">
+                    <i class="fa-solid fa-chart-line w-5"></i>
+                    <span>${t('analytics')}</span>
+                </a>
+                <a onclick="navigate('users')" class="sidebar-link flex items-center gap-x-3 px-6 py-4 text-sm font-medium rounded-3xl mb-1 ${currentPanel==='users'?'active bg-white/10':''}">
+                    <i class="fa-solid fa-users w-5"></i>
+                    <span>${t('users')}</span>
+                </a>
+                <a onclick="navigate('announcements')" class="sidebar-link flex items-center gap-x-3 px-6 py-4 text-sm font-medium rounded-3xl mb-1 ${currentPanel==='announcements'?'active bg-white/10':''}">
+                    <i class="fa-solid fa-bullhorn w-5"></i>
+                    <span>${t('announcements')}</span>
+                </a>
+                `
+            }
+            
+            html += `</div>`
+            sidebar.innerHTML = html
+        }
+        
+        function navigate(panel) {
+            currentPanel = panel
+            renderSidebar()
+            renderMainContent()
+        }
+        
+        function t(key) {
+            return i18n[currentLang][key] || key
+        }
+        
+        function changeLanguage(lang) {
+            currentLang = lang
+            // Update active language button
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.dataset.active = btn.id === `lang-${lang}`
+            })
+            renderMainContent()
+            renderSidebar()
+        }
+        
+        // ====================== MAIN RENDERER ======================
+        function renderMainContent() {
+            const container = document.getElementById('main-content')
+            let html = `<div class="main-content">`
+            
+            if (currentPanel === 'dashboard') {
+                html += renderDashboard()
+            } else if (currentPanel === 'submit') {
+                html += renderSubmitForm()
+            } else if (currentPanel === 'mycomplaints') {
+                html += renderMyComplaints()
+            } else if (currentPanel === 'allcomplaints') {
+                html += renderAllComplaints()
+            } else if (currentPanel === 'analytics') {
+                html += renderAnalytics()
+            } else if (currentPanel === 'users') {
+                html += renderUsersManagement()
+            } else if (currentPanel === 'announcements') {
+                html += renderAnnouncementsPanel()
+            }
+            
+            html += `</div>`
+            container.innerHTML = html
+            
+            // Re-attach Chart.js if needed
+            if (currentPanel === 'dashboard' || currentPanel === 'analytics') {
+                setTimeout(() => {
+                    if (document.getElementById('progress-chart')) renderProgressChart()
+                    if (document.getElementById('analytics-chart')) renderAnalyticsChart()
+                }, 100)
+            }
+        }
+        
+        // ====================== DASHBOARD ======================
+        function renderDashboard() {
+            const myComplaints = complaints.filter(c => c.studentId === currentUser.id)
+            const total = myComplaints.length
+            const resolved = myComplaints.filter(c => c.status === 'Solved').length
+            const active = total - resolved
+            
+            let html = `
+            <div class="flex justify-between items-end mb-8">
+                <div>
+                    <h1 class="text-4xl font-semibold neon-text">${t('dashboard')}</h1>
+                    <p class="text-slate-400">Welcome back, ${currentUser.name} 👋</p>
+                </div>
+                <div class="flex gap-x-6 text-right">
+                    <div>
+                        <div class="text-xs uppercase text-slate-400">${t('totalComplaints')}</div>
+                        <div class="text-5xl font-bold text-[#00f5ff]">${total}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs uppercase text-emerald-400">${t('resolved')}</div>
+                        <div class="text-5xl font-bold text-emerald-400">${resolved}</div>
+                    </div>
+                    <div>
+                        <div class="text-xs uppercase text-amber-400">${t('active')}</div>
+                        <div class="text-5xl font-bold text-amber-400">${active}</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
+                <div class="glass rounded-3xl p-6 card-hover">
+                    <div class="flex justify-between">
+                        <div>
+                            <i class="fa-solid fa-bolt text-4xl text-[#00f5ff]"></i>
+                            <p class="mt-6 text-2xl font-semibold">${t('electricity')}</p>
+                            <p class="text-xs text-slate-400">Last 7 days</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="px-4 py-1 text-xs rounded-3xl bg-[#00f5ff]/10 text-[#00f5ff]">8</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass rounded-3xl p-6 card-hover">
+                    <div class="flex justify-between">
+                        <div>
+                            <i class="fa-solid fa-wrench text-4xl text-[#00f5ff]"></i>
+                            <p class="mt-6 text-2xl font-semibold">${t('maintenance')}</p>
+                            <p class="text-xs text-slate-400">Last 7 days</p>
+                        </div>
+                        <div class="text-right">
+                            <span class="px-4 py-1 text-xs rounded-3xl bg-[#00f5ff]/10 text-[#00f5ff]">5</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="glass rounded-3xl p-6 card-hover border border-[#00f5ff]/30">
+                    <div class="flex justify-between">
+                        <div>
+                            <p class="text-2xl font-semibold">Avg. resolution time</p>
+                            <p class="text-emerald-400 text-5xl font-bold mt-2">2.4 days</p>
+                        </div>
+                        <i class="fa-solid fa-clock text-6xl opacity-20"></i>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Chart -->
+            <div class="glass rounded-3xl p-8">
+                <h3 class="text-lg font-medium mb-6 flex items-center justify-between">
+                    <span>Complaint Progress • Last 30 days</span>
+                    <span class="text-xs text-slate-400">Line chart</span>
+                </h3>
+                <canvas id="progress-chart" class="w-full" height="120"></canvas>
+            </div>
+            `
+            if (currentUser.role === 'student') {
+                html += `<div onclick="navigate('submit')" class="mt-8 glow-button text-center py-6 bg-gradient-to-r from-[#00f5ff] to-[#0099ff] text-black font-bold rounded-3xl text-xl cursor-pointer">+ ${t('submitNew')}</div>`
+            }
+            return html
+        }
+        
+        function renderProgressChart() {
+            const ctx = document.getElementById('progress-chart')
+            if (!ctx) return
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: ['Mar 8', 'Mar 12', 'Mar 16', 'Mar 20', 'Mar 24', 'Mar 28', 'Apr 1', 'Apr 5'],
+                    datasets: [{
+                        label: 'Submitted',
+                        data: [2, 4, 1, 5, 3, 7, 2, 4],
+                        borderColor: '#00f5ff',
+                        borderWidth: 4,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6,
+                        pointBackgroundColor: '#fff'
+                    }, {
+                        label: 'Solved',
+                        data: [1, 2, 1, 4, 3, 6, 2, 4],
+                        borderColor: '#10b981',
+                        borderWidth: 4,
+                        tension: 0.4,
+                        pointRadius: 0,
+                        pointHoverRadius: 6
+                    }]
+                },
+                options: {
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#64748b' } },
+                        x: { grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#64748b' } }
+                    }
+                }
+            })
+        }
+        
+        // ====================== SUBMIT FORM ======================
+        function renderSubmitForm() {
+            return `
+            <div class="max-w-2xl mx-auto">
+                <h1 class="text-4xl font-semibold mb-2">${t('submitNew')}</h1>
+                <p class="text-slate-400 mb-8">Describe your issue. Voice, photo &amp; translation supported.</p>
+                
+                <div class="glass rounded-3xl p-8">
+                    <div class="mb-6">
+                        <label class="block text-xs uppercase mb-2 text-slate-400">Title</label>
+                        <input id="complaint-title" type="text" placeholder="E.g. No electricity in room 204" 
+                               class="w-full glass border border-white/10 rounded-2xl px-6 py-5 text-lg">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-6 mb-6">
+                        <div>
+                            <label class="block text-xs uppercase mb-2 text-slate-400">Department</label>
+                            <select id="complaint-dept" class="w-full glass border border-white/10 rounded-2xl px-6 py-5 text-lg">
+                                <option value="Electricity">${t('electricity')}</option>
+                                <option value="Maintenance">${t('maintenance')}</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase mb-2 text-slate-400">Date</label>
+                            <input type="text" value="${new Date().toISOString().slice(0,10)}" disabled 
+                                   class="w-full glass border border-white/10 rounded-2xl px-6 py-5 text-lg bg-white/5">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-xs uppercase mb-2 text-slate-400">Description</label>
+                        <div class="flex gap-x-3">
+                            <textarea id="complaint-desc" rows="5" 
+                                      class="flex-1 glass border border-white/10 rounded-3xl px-6 py-5 text-base resize-none" 
+                                      placeholder="Explain the problem in detail..."></textarea>
+                            
+                            <!-- Voice -->
+                            <button onclick="startVoiceInput()" 
+                                    class="w-14 h-14 flex-shrink-0 glass rounded-3xl flex items-center justify-center text-3xl hover:scale-110">
+                                🎤
+                            </button>
+                            
+                            <!-- Translate -->
+                            <div class="flex flex-col gap-y-2">
+                                <button onclick="translateComplaint('hi')" 
+                                        class="px-4 text-xs h-7 glass rounded-3xl flex items-center justify-center">हिंदी</button>
+                                <button onclick="translateComplaint('mr')" 
+                                        class="px-4 text-xs h-7 glass rounded-3xl flex items-center justify-center">मराठी</button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Image upload -->
+                    <div class="mb-8">
+                        <label class="block text-xs uppercase mb-2 text-slate-400">Attach Photo (optional)</label>
+                        <div onclick="document.getElementById('image-upload').click()" 
+                             class="border border-dashed border-white/30 rounded-3xl h-40 flex flex-col items-center justify-center cursor-pointer hover:border-[#00f5ff]">
+                            <i class="fa-solid fa-cloud-upload text-4xl mb-3"></i>
+                            <p class="text-sm text-slate-300">Click to upload image</p>
+                            <input type="file" id="image-upload" accept="image/*" class="hidden" onchange="handleImageUpload(event)">
+                            <img id="preview-image" class="hidden max-h-32 mt-3 rounded-2xl">
+                        </div>
+                    </div>
+                    
+                    <button onclick="submitComplaint()" 
+                            class="glow-button w-full py-6 text-xl font-semibold bg-gradient-to-r from-[#00f5ff] to-[#0099ff] text-black rounded-3xl flex items-center justify-center gap-x-3">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        SUBMIT COMPLAINT
+                    </button>
+                </div>
+            </div>`
+        }
+        
+        let uploadedImageBase64 = null
+        
+        function handleImageUpload(e) {
+            const file = e.target.files[0]
+            if (!file) return
+            const reader = new FileReader()
+            reader.onload = function(ev) {
+                uploadedImageBase64 = ev.target.result
+                const preview = document.getElementById('preview-image')
+                preview.src = uploadedImageBase64
+                preview.classList.remove('hidden')
+            }
+            reader.readAsDataURL(file)
+        }
+        
+        function startVoiceInput() {
+            if (!('SpeechRecognition' in window || 'webkitSpeechRecognition' in window)) {
+                showToast("Voice input not supported in your browser", true)
+                return
+            }
+            const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition
+            const recognition = new SpeechRecognition()
+            recognition.lang = currentLang === 'hi' ? 'hi-IN' : currentLang === 'mr' ? 'mr-IN' : 'en-IN'
+            recognition.onresult = function(event) {
+                const transcript = event.results[0][0].transcript
+                const desc = document.getElementById('complaint-desc')
+                desc.value += (desc.value ? ' ' : '') + transcript
+                showToast("Voice captured successfully!")
+            }
+            recognition.start()
+            showToast("🎤 Listening… speak now")
+        }
+        
+        function translateComplaint(targetLang) {
+            const descEl = document.getElementById('complaint-desc')
+            const text = descEl.value.trim()
+            if (!text) {
+                showToast("Write something to translate first", true)
+                return
+            }
+            
+            // Simulated translation (real app would call API)
+            let translated = text
+            if (targetLang === 'hi') translated = `[हिंदी] ${text} – समस्या का विवरण दर्ज किया गया`
+            else if (targetLang === 'mr') translated = `[मराठी] ${text} – समस्या नोंदवली गेली`
+            
+            showToast(`Translated to ${targetLang.toUpperCase()}!`, false)
+            
+            // Show preview in modal later but here we just show toast
+            // For demo we keep original, but show success
+        }
+        
+        function submitComplaint() {
+            const title = document.getElementById('complaint-title').value.trim()
+            const dept = document.getElementById('complaint-dept').value
+            const desc = document.getElementById('complaint-desc').value.trim()
+            
+            if (!title || !desc) {
+                showToast("Title and description are required", true)
+                return
+            }
+            
+            // Moderation check
+            const lowerDesc = desc.toLowerCase()
+            const isProfane = profaneWords.some(word => lowerDesc.includes(word))
+            if (isProfane) {
+                autoSuspendStudent()
+                return
+            }
+            
+            const newComplaint = {
+                id: "C-" + String(1000 + complaints.length + Math.floor(Math.random()*900)).padStart(4, '0'),
+                studentId: currentUser.id,
+                studentName: currentUser.name,
+                title: title,
+                department: dept,
+                description: desc,
+                image: uploadedImageBase64,
+                status: "Pending",
+                timestamp: new Date().toISOString(),
+                responses: [],
+                chat: []
+            }
+            
+            complaints.unshift(newComplaint)
+            localStorage.setItem('campusforge_complaints', JSON.stringify(complaints))
+            
+            uploadedImageBase64 = null
+            showToast("Complaint submitted successfully! ID: " + newComplaint.id)
+            
+            // Reset form and go to my complaints
+            setTimeout(() => {
+                navigate('mycomplaints')
+            }, 800)
+        }
+        
+        function autoSuspendStudent() {
+            const users = JSON.parse(localStorage.getItem('campusforge_users') || '[]')
+            const userIndex = users.findIndex(u => u.id === currentUser.id)
+            if (userIndex > -1) {
+                const suspendDate = new Date()
+                suspendDate.setDate(suspendDate.getDate() + 20)
+                users[userIndex].suspendedUntil = suspendDate.toISOString()
+                localStorage.setItem('campusforge_users', JSON.stringify(users))
+            }
+            showToast("🚫 Profane language detected! You have been suspended for 20 days.", true)
+            setTimeout(logout, 1500)
+        }
+        
+        // ====================== MY COMPLAINTS ======================
+        function renderMyComplaints() {
+            const myComplaints = complaints.filter(c => c.studentId === currentUser.id)
+            
+            let html = `<h1 class="text-3xl font-semibold mb-8">${t('myComplaints')}</h1>`
+            
+            if (myComplaints.length === 0) {
+                html += `<p class="text-slate-400 text-center py-12">No complaints yet. Submit your first one!</p>`
+                return html
+            }
+            
+            html += `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">`
+            
+            myComplaints.forEach(comp => {
+                const statusColor = comp.status === 'Solved' ? 'emerald' : comp.status === 'Pending' ? 'amber' : 'blue'
+                html += `
+                <div onclick="openComplaintModal('${comp.id}')" class="glass rounded-3xl p-6 card-hover cursor-pointer">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <span class="px-3 py-1 text-xs font-bold rounded-3xl bg-${statusColor}-400/10 text-${statusColor}-400">${comp.status}</span>
+                            <p class="mt-4 font-medium">${comp.title}</p>
+                            <p class="text-xs text-slate-400">${comp.department} • ${new Date(comp.timestamp).toLocaleDateString()}</p>
+                        </div>
+                        ${comp.image ? `<i class="fa-solid fa-image text-4xl text-[#00f5ff]"></i>` : ''}
+                    </div>
+                </div>`
+            })
+            
+            html += `</div>`
+            return html
+        }
+        
+        // ====================== ALL COMPLAINTS (TEACHER / MAINTENANCE / ADMIN) ======================
+        function renderAllComplaints() {
+            let filtered = complaints
+            
+            // For demo only Maintenance role sees only Maintenance depts
+            if (currentUser.role === 'maintenance') {
+                filtered = complaints.filter(c => c.department === 'Maintenance')
+            }
+            
+            let html = `
+            <div class="flex justify-between mb-8 items-center">
+                <h1 class="text-3xl font-semibold">${t('allComplaints')}</h1>
+                <input id="filter-input" onkeyup="if(event.keyCode===13) filterComplaints()" placeholder="Filter by title or ID" 
+                       class="glass border border-white/10 px-6 h-10 rounded-3xl text-sm w-72">
+            </div>`
+            
+            html += `<div class="space-y-4">`
+            
+            filtered.forEach(comp => {
+                html += `
+                <div onclick="openComplaintModal('${comp.id}')" class="glass flex justify-between items-center px-8 py-5 rounded-3xl cursor-pointer hover:shadow-[0_0_20px_#00f5ff]">
+                    <div class="flex items-center gap-x-6">
+                        <div class="text-xs font-mono text-slate-400">${comp.id}</div>
+                        <div>
+                            <p class="font-medium">${comp.title}</p>
+                            <p class="text-xs">${comp.studentName} • ${comp.department}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-x-8">
+                        <span class="px-5 py-2 text-xs font-bold rounded-3xl ${comp.status==='Solved'?'bg-emerald-400/10 text-emerald-400':'bg-amber-400/10 text-amber-400'}">${comp.status}</span>
+                        <i class="fa-solid fa-chevron-right text-[#00f5ff]"></i>
+                    </div>
+                </div>`
+            })
+            
+            html += `</div>`
+            return html
+        }
+        
+        function filterComplaints() {
+            renderMainContent() // simple re-render for demo
+        }
+        
+        // ====================== MODAL ======================
+        function openComplaintModal(id) {
+            selectedComplaintId = id
+            const complaint = complaints.find(c => c.id === id)
+            if (!complaint) return
+            
+            document.getElementById('complaint-modal').classList.remove('hidden')
+            document.getElementById('complaint-modal').classList.add('flex')
+            
+            // Fill modal
+            document.getElementById('modal-title').innerHTML = `${complaint.title} <span class="text-xs ml-3 font-mono">${complaint.id}</span>`
+            document.getElementById('modal-student').innerHTML = `${complaint.studentName} • ${complaint.department} • ${new Date(complaint.timestamp).toLocaleString()}`
+            document.getElementById('modal-desc').textContent = complaint.description
+            
+            // Status badge
+            const statusHTML = `<span onclick="event.stopImmediatePropagation()" class="px-6 py-2 text-sm font-bold rounded-3xl ${complaint.status==='Solved'?'bg-emerald-400/10 text-emerald-400':complaint.status==='Pending'?'bg-amber-400/10 text-amber-400':'bg-blue-400/10 text-blue-400'}">${complaint.status}</span>`
+            document.getElementById('modal-status').innerHTML = statusHTML
+            
+            // Image
+            const imgContainer = document.getElementById('modal-image-container')
+            if (complaint.image) {
+                document.getElementById('modal-image').src = complaint.image
+                imgContainer.classList.remove('hidden')
+            } else imgContainer.classList.add('hidden')
+            
+            // Responses
+            let resHTML = ''
+            complaint.responses.forEach(r => {
+                resHTML += `
+                <div class="glass rounded-2xl p-4">
+                    <div class="flex justify-between text-xs"><span class="text-[#00f5ff]">${r.from}</span><span>${new Date(r.time).toLocaleString()}</span></div>
+                    <p class="mt-2">${r.text}</p>
+                </div>`
+            })
+            document.getElementById('modal-responses').innerHTML = resHTML || `<p class="text-slate-400 text-sm italic">No responses yet</p>`
+            
+            // Chat
+            renderChatWindow(complaint)
+            
+            // Show / hide admin controls
+            const controls = document.getElementById('modal-admin-controls')
+            if (currentUser.role === 'student') {
+                controls.style.display = 'none'
+            } else {
+                controls.style.display = 'block'
+                // Prefill status
+                document.getElementById('status-select').value = complaint.status
+            }
+            
+            // Translate preview demo
+            document.getElementById('translate-preview').classList.add('hidden')
+        }
+        
+        function hideModal() {
+            const modal = document.getElementById('complaint-modal')
+            modal.classList.add('hidden')
+            modal.classList.remove('flex')
+            selectedComplaintId = null
+        }
+        
+        function renderChatWindow(complaint) {
+            const container = document.getElementById('chat-window')
+            container.innerHTML = ''
+            
+            complaint.chat.forEach(msg => {
+                const bubble = document.createElement('div')
+                bubble.className = msg.user === currentUser.name 
+                    ? 'self-end bg-[#00f5ff] text-black max-w-[75%] px-5 py-3 rounded-3xl rounded-br-none mb-3' 
+                    : 'self-start glass max-w-[75%] px-5 py-3 rounded-3xl rounded-bl-none mb-3'
+                bubble.innerHTML = `<p class="text-xs opacity-70">${msg.user} • ${new Date(msg.time).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'})}</p><p>${msg.msg}</p>`
+                container.appendChild(bubble)
+            })
+            
+            container.scrollTop = container.scrollHeight
+        }
+        
+        function sendChatMessage() {
+            const input = document.getElementById('chat-input')
+            const message = input.value.trim()
+            if (!message || !selectedComplaintId) return
+            
+            const complaint = complaints.find(c => c.id === selectedComplaintId)
+            complaint.chat.push({
+                user: currentUser.name,
+                msg: message,
+                time: new Date().toISOString()
+            })
+            
+            localStorage.setItem('campusforge_complaints', JSON.stringify(complaints))
+            renderChatWindow(complaint)
+            input.value = ''
+        }
+        
+        function clearChat() {
+            if (!selectedComplaintId) return
+            const complaint = complaints.find(c => c.id === selectedComplaintId)
+            complaint.chat = []
+            localStorage.setItem('campusforge_complaints', JSON.stringify(complaints))
+            renderChatWindow(complaint)
+        }
+        
+        function updateComplaintStatus() {
+            if (!selectedComplaintId) return
+            const complaint = complaints.find(c => c.id === selectedComplaintId)
+            const newStatus = document.getElementById('status-select').value
+            const responseText = document.getElementById('response-text').value.trim()
+            
+            complaint.status = newStatus
+            
+            if (responseText) {
+                complaint.responses.push({
+                    from: currentUser.role === 'superadmin' ? 'Super Admin' : currentUser.name,
+                    text: responseText,
+                    time: new Date().toISOString()
+                })
+            }
+            
+            localStorage.setItem('campusforge_complaints', JSON.stringify(complaints))
+            showToast("Status updated successfully!")
+            hideModal()
+            renderMainContent()
+        }
+        
+        function suspendStudentFromModal() {
+            if (!selectedComplaintId) return
+            const complaint = complaints.find(c => c.id === selectedComplaintId)
+            const users = JSON.parse(localStorage.getItem('campusforge_users') || '[]')
+            const userIndex = users.findIndex(u => u.id === complaint.studentId)
+            
+            if (userIndex > -1) {
+                const suspendDate = new Date()
+                suspendDate.setDate(suspendDate.getDate() + 20)
+                users[userIndex].suspendedUntil = suspendDate.toISOString()
+                localStorage.setItem('campusforge_users', JSON.stringify(users))
+                showToast(`Student ${complaint.studentName} suspended for 20 days`)
+                hideModal()
+            }
+        }
+        
+        // ====================== ANALYTICS ======================
+        function renderAnalytics() {
+            const total = complaints.length
+            const solved = complaints.filter(c => c.status === 'Solved').length
+            const pending = total - solved
+            
+            return `
+            <h1 class="text-4xl font-semibold mb-8">${t('analytics')}</h1>
+            
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-10">
+                <div class="glass p-6 rounded-3xl text-center">
+                    <div class="text-6xl font-bold text-[#00f5ff]">${total}</div>
+                    <div class="uppercase text-xs mt-1 tracking-widest">${t('totalComplaints')}</div>
+                </div>
+                <div class="glass p-6 rounded-3xl text-center">
+                    <div class="text-6xl font-bold text-emerald-400">${solved}</div>
+                    <div class="uppercase text-xs mt-1 tracking-widest">${t('resolved')}</div>
+                </div>
+                <div class="glass p-6 rounded-3xl text-center">
+                    <div class="text-6xl font-bold text-amber-400">${pending}</div>
+                    <div class="uppercase text-xs mt-1 tracking-widest">${t('pending')}</div>
+                </div>
+                <div class="glass p-6 rounded-3xl text-center">
+                    <div class="text-6xl font-bold">2</div>
+                    <div class="uppercase text-xs mt-1 tracking-widest">Departments</div>
+                </div>
+            </div>
+            
+            <div class="glass rounded-3xl p-8">
+                <h3 class="mb-6">Complaints Trend &amp; Department Distribution</h3>
+                <canvas id="analytics-chart" height="110"></canvas>
+            </div>`
+        }
+        
+        function renderAnalyticsChart() {
+            const ctx = document.getElementById('analytics-chart')
+            if (!ctx) return
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Electricity', 'Maintenance'],
+                    datasets: [{
+                        label: 'Pending',
+                        data: [4, 3],
+                        backgroundColor: '#f59e0b'
+                    }, {
+                        label: 'Solved',
+                        data: [7, 5],
+                        backgroundColor: '#10b981'
+                    }]
+                },
+                options: {
+                    plugins: { legend: { position: 'top' } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#334155' } } }
+                }
+            })
+        }
+        
+        // ====================== USERS MANAGEMENT (SUPER ADMIN) ======================
+        function renderUsersManagement() {
+            const users = JSON.parse(localStorage.getItem('campusforge_users') || '[]')
+            let html = `<h1 class="text-3xl font-semibold mb-8">Manage Users &amp; Suspensions</h1>`
+            
+            html += `<div class="glass rounded-3xl p-2">`
+            html += `<table class="w-full"><thead><tr class="text-xs uppercase text-slate-400"><th class="text-left p-6">ID</th><th class="text-left p-6">Name</th><th class="text-left p-6">Role</th><th class="text-left p-6">Status</th><th class="w-24"></th></tr></thead><tbody>`
+            
+            users.forEach(user => {
+                const isSuspended = user.suspendedUntil && new Date(user.suspendedUntil) > new Date()
+                html += `
+                <tr class="border-t border-white/10">
+                    <td class="p-6 font-mono">${user.id}</td>
+                    <td class="p-6">${user.name}</td>
+                    <td class="p-6"><span class="uppercase text-xs px-4 py-1 rounded-3xl bg-white/10">${user.role}</span></td>
+                    <td class="p-6">${isSuspended ? `<span class="text-red-400">Suspended until ${new Date(user.suspendedUntil).toLocaleDateString()}</span>` : `<span class="text-emerald-400">Active</span>`}</td>
+                    <td class="p-6">
+                        ${user.role === 'student' && !isSuspended ? `<button onclick="manuallySuspend('${user.id}')" class="text-xs bg-red-400/10 text-red-400 px-6 py-2 rounded-3xl">Suspend 20d</button>` : ''}
+                    </td>
+                </tr>`
+            })
+            
+            html += `</tbody></table></div>`
+            
+            // Demo role switcher for super admin
+            html += `
+            <div class="mt-12 glass rounded-3xl p-8">
+                <h4 class="font-medium mb-4">Demo: Switch role temporarily</h4>
+                <div class="flex gap-x-4">
+                    <button onclick="demoSwitchRole('student')" class="flex-1 py-4 bg-white/10 rounded-3xl text-sm font-medium">View as Student</button>
+                    <button onclick="demoSwitchRole('teacher')" class="flex-1 py-4 bg-white/10 rounded-3xl text-sm font-medium">View as Teacher</button>
+                    <button onclick="demoSwitchRole('maintenance')" class="flex-1 py-4 bg-white/10 rounded-3xl text-sm font-medium">View as Maintenance</button>
+                </div>
+            </div>`
+            
+            return html
+        }
+        
+        function manuallySuspend(studentId) {
+            const users = JSON.parse(localStorage.getItem('campusforge_users') || '[]')
+            const userIndex = users.findIndex(u => u.id === studentId)
+            if (userIndex > -1) {
+                const d = new Date()
+                d.setDate(d.getDate() + 20)
+                users[userIndex].suspendedUntil = d.toISOString()
+                localStorage.setItem('campusforge_users', JSON.stringify(users))
+                showToast('Student suspended for 20 days')
+                renderMainContent()
+            }
+        }
+        
+        function demoSwitchRole(role) {
+            const tempUser = { ...currentUser, role: role, name: role === 'student' ? 'Demo Student' : currentUser.name }
+            currentUser = tempUser
+            hideModal()
+            renderSidebar()
+            navigate('dashboard')
+            showToast(`Now viewing as ${role.toUpperCase()} (demo)`)
+        }
+        
+        function switchRoleDemo() {
+            // Called from badge click in super admin
+            if (currentUser.role === 'superadmin') demoSwitchRole('student')
+        }
+        
+        // ====================== ANNOUNCEMENTS ======================
+        function renderAnnouncementsPanel() {
+            const ann = JSON.parse(localStorage.getItem('campusforge_announcements') || '[]')
+            let html = `<h1 class="text-3xl font-semibold mb-8">${t('announcements')}</h1>`
+            
+            ann.forEach(a => {
+                html += `
+                <div class="glass rounded-3xl p-6 mb-4">
+                    <div class="text-xs text-[#00f5ff]">${a.date} • ${a.postedBy}</div>
+                    <p class="font-semibold text-xl mt-2">${a.title}</p>
+                    <p class="mt-3 text-slate-300">${a.content}</p>
+                </div>`
+            })
+            
+            if (currentUser.role === 'superadmin') {
+                html += `<button onclick="postNewAnnouncement()" class="glow-button mt-6 w-full py-5 text-black bg-[#00f5ff] rounded-3xl">+ Post New System Announcement</button>`
+            }
+            return html
+        }
+        
+        function postNewAnnouncement() {
+            const title = prompt("Announcement title?")
+            if (!title) return
+            const content = prompt("Announcement body?")
+            announcementsData.unshift({
+                id: Date.now(),
+                title: title,
+                content: content || "New update",
+                date: new Date().toISOString().slice(0,10),
+                postedBy: "Super Admin"
+            })
+            localStorage.setItem('campusforge_announcements', JSON.stringify(announcementsData))
+            renderMainContent()
+            showToast("Announcement posted system-wide")
+        }
+        
+        function showAnnouncements() {
+            navigate('announcements')
+        }
+        
+        // ====================== UTILITIES ======================
+        function showToast(message, isError = false) {
+            const toast = document.getElementById('toast')
+            document.getElementById('toast-text').innerHTML = message
+            if (isError) toast.style.backgroundColor = '#f43f5e'
+            else toast.style.backgroundColor = '#00f5ff'
+            toast.classList.remove('hidden')
+            setTimeout(() => {
+                toast.classList.add('hidden')
+            }, 3500)
+        }
+        
+        function showProfile() {
+            showToast(`Logged in as ${currentUser.name} (${currentUser.role})`)
+        }
+        
+        function showSearch() {
+            const term = prompt("Search complaints (demo)")
+            if (term) {
+                navigate('allcomplaints')
+            }
+        }
+        
+        // Auto start
+        window.onload = function() {
+            initTailwind().config().theme()
+            // Check if already logged in
+            const saved = localStorage.getItem('campusforge_current_user')
+            if (saved) {
+                currentUser = JSON.parse(saved)
+                document.getElementById('login-screen').classList.add('hidden')
+                document.getElementById('app-screen').classList.remove('hidden')
+                initApp()
+            } else {
+                // Show login
+                selectRole(0)
+            }
+        }
+    </script>
+</body>
+</html>
